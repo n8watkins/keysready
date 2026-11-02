@@ -1,0 +1,23 @@
+{
+  "name": "keysready",
+  "version": "0.0.0",
+  "private": true,
+  "description": "KeysReady: online booking, live repair status and pay-by-phone estimates for small auto repair shops. The app is in web/, the landing page in landing/.",
+  "scripts": {
+    "setup": "npm --prefix web ci && npm --prefix landing ci",
+    "dev": "npm --prefix web run dev",
+    "lint": "npm --prefix web run lint && npm --prefix landing run lint",
+    "typecheck": "npm --prefix web run typecheck && npm --prefix landing run typecheck",
+    "build": "SESSION_SECRET=${SESSION_SECRET:-build-only-not-a-real-secret} npm --prefix web run build && npm --prefix landing run build",
+    "release:check": "release-kit check && npm run setup && npm run lint && npm run typecheck && npm run build",
+    "release": "release-kit release",
+    "prepare": "git config core.hooksPath .githooks || true"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "release-kit": "github:n8watkins/release-kit#v2.2.0"
+  }
+}

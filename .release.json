@@ -1,0 +1,7 @@
+{
+  "versionFiles": [
+    "web/package.json",
+    "web/package-lock.json"
+  ],
+  "workflows": "package"
+}
