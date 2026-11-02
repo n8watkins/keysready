@@ -16,7 +16,10 @@ export default function DriverLoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("error") === "expired") {
-      setError("That sign-in link has expired or was already used. Enter your email to get a fresh one.");
+      // Deferred to a microtask so no state update runs synchronously in the effect.
+      void Promise.resolve().then(() =>
+        setError("That sign-in link has expired or was already used. Enter your email to get a fresh one."),
+      );
     }
   }, []);
 

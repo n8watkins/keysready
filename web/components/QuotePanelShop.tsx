@@ -132,7 +132,8 @@ export default function QuotePanelShop({ bookingRef }: Props) {
   }, [bookingRef, applyQuote]);
 
   useEffect(() => {
-    void load();
+    // Deferred to a microtask so no state update runs synchronously in the effect.
+    void Promise.resolve().then(load);
   }, [load]);
 
   // Editing is locked once the customer has acted on the estimate.

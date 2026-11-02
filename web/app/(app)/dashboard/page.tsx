@@ -68,7 +68,8 @@ export default function DashboardPage() {
   }, [router]);
 
   useEffect(() => {
-    load();
+    // Deferred to a microtask so no state update runs synchronously in the effect.
+    void Promise.resolve().then(load);
   }, [load]);
 
   async function save(ref: string) {

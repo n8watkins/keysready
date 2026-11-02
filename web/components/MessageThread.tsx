@@ -109,7 +109,9 @@ export default function MessageThread({ bookingRef }: Props) {
 
   // Poll on mount + every 4s while mounted.
   useEffect(() => {
-    refresh();
+    // The first fetch is deferred to a microtask so no state update runs
+    // synchronously in the effect.
+    void Promise.resolve().then(refresh);
     pollRef.current = setInterval(refresh, POLL_MS);
     return () => stopPolling();
   }, [refresh, stopPolling]);
