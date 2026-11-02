@@ -41,6 +41,8 @@ npm run dev                  # http://localhost:2323
 ```
 
 Locally the app writes to a SQLite file at `web/.data/app.db` and seeds a demo shop on first run.
+Every environment variable is documented in [`web/.env.example`](web/.env.example); `.env.local` is git-ignored.
+If you keep secrets in [`pass`](https://www.passwordstore.org/), [pass-env](https://github.com/n8watkins/pass-env) is an optional alternative to `.env.local`: list the names in a `web/.env.pass` file (names only, never values) and run `pass-env run -- npm run dev` from `web/`.
 See [`web/README.md`](web/README.md) for the full setup, the demo shop login, and the end-to-end test.
 
 ## Stack
@@ -50,6 +52,16 @@ See [`web/README.md`](web/README.md) for the full setup, the demo shop login, an
 - **Web Push** (`web-push` + VAPID) for staff and customer notifications.
 - **Stripe Checkout** for estimate payments; card data never touches the app.
 - **Brevo or Resend** for magic-link email, with a console fallback in development.
+
+## Commits and releases
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org) (`feat: ...`, `fix: ...`, `docs: ...`), and releases are cut with [release-kit](https://github.com/n8watkins/release-kit); see [`RELEASING.md`](RELEASING.md).
+`npm install` at the repository root turns on a `commit-msg` hook that checks each message, and CI checks pushed commits and pull request titles.
+`npm run release:check` at the root installs `web/` and `landing/` and runs their lint, types and build; it is what a release runs before it publishes.
+
+Releasing is optional and only for this repository: a fork never has to tag, release or set up anything.
+The Release workflow runs only in `n8watkins/keysready`, so pushing a tag in a fork publishes nothing.
+The hook only checks message format; `git commit --no-verify` skips it.
 
 ## Security
 
