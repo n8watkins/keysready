@@ -3,5 +3,6 @@
     "web/package.json",
     "web/package-lock.json"
   ],
-  "workflows": "package"
+  "workflows": "package",
+  "repository": "n8watkins/keysready"
 }
