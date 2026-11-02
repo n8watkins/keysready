@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f6f4ef;
+  --bg-sunk: #ece9e1;
+  --surface: #ffffff;
+  --ink: #16171b;
+  --muted: #5b5a63;
+  --line: #e0dcd2;
+  --line-strong: #c9c4b7;
+  --accent: #c81e1e;
+  --accent-soft: #fbe2df;
+  --ready: #0f7a4f;
+  --ready-soft: #d9f2e5;
+  --pending: #8a5a00;
+  --pending-soft: #fbefd2;
+  --code-bg: #16171b;
+  --code-ink: #ece9e2;
+  --code-muted: #9a97a3;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1012;
+    --bg-sunk: #0a0a0c;
+    --surface: #17181c;
+    --ink: #f1efe9;
+    --muted: #a6a4ad;
+    --line: #2a2b31;
+    --line-strong: #3b3c44;
+    --accent: #ff5a4e;
+    --accent-soft: #3b1715;
+    --ready: #43d095;
+    --ready-soft: #10302a;
+    --pending: #f2c45a;
+    --pending-soft: #362c14;
+    --code-bg: #0a0a0c;
+    --code-ink: #ece9e2;
+    --code-muted: #8d8a96;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-sunk: var(--bg-sunk);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-ready: var(--ready);
+  --color-ready-soft: var(--ready-soft);
+  --color-pending: var(--pending);
+  --color-pending-soft: var(--pending-soft);
+  --color-code-bg: var(--code-bg);
+  --color-code-ink: var(--code-ink);
+  --color-code-muted: var(--code-muted);
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-heading), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Hero demo: notifications arrive one by one, only once JavaScript marks the demo as animated. */
+@keyframes notif-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.demo[data-animate="true"] .demo-stage {
+  opacity: 0;
+  animation: notif-in 460ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+.demo[data-animate="true"] .demo-stage[data-stage="1"] {
+  animation-delay: 200ms;
+}
+.demo[data-animate="true"] .demo-stage[data-stage="2"] {
+  animation-delay: 1300ms;
+}
+.demo[data-animate="true"] .demo-stage[data-stage="3"] {
+  animation-delay: 2500ms;
+}
+.demo[data-animate="true"] .demo-stage[data-stage="4"] {
+  animation-delay: 3600ms;
+}
+
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.demo[data-animate="true"] .demo-progress {
+  transform-origin: left;
+  animation: fill 3400ms ease-in-out 200ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo[data-animate="true"] .demo-stage,
+  .demo[data-animate="true"] .demo-progress {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bg-dots {
+  background-image: radial-gradient(var(--line-strong) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse at 70% 10%, black 0%, transparent 65%);
+}
+
+/* Archivo's word space is narrow, and tight tracking closes it further; open it up for headings. */
+.font-display {
+  word-spacing: 0.06em;
+}
