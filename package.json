@@ -1,6 +1,6 @@
 {
   "name": "keysready",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "KeysReady: online booking, live repair status and pay-by-phone estimates for small auto repair shops. The app is in web/, the landing page in landing/.",
   "scripts": {
