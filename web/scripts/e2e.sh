@@ -2,7 +2,11 @@
 # End-to-end test for KeysReady V3: driver login (magic link) -> book -> shop quote ->
 # driver approve -> Stripe Checkout session -> SIGNED webhook -> booking marked paid.
 # Also checks auth/state-machine guards. Run from anywhere:  bash web/scripts/e2e.sh
-# Requires: a built app (next build) and web/.env.local with DB + Stripe (+ optional VAPID).
+# Requires: a built app (next build) and web/.env.local with Stripe test keys and the
+# demo owner settings (+ optional VAPID).
+# Database: a brand-new throwaway SQLite file per run, whatever .env.local says, so a
+# run can never write to production. Set E2E_DATABASE_URL (+ E2E_DATABASE_AUTH_TOKEN)
+# to test against another throwaway database on purpose.
 set -uo pipefail
 cd "$(dirname "$0")/.."   # -> web/
 
@@ -10,12 +14,20 @@ cd "$(dirname "$0")/.."   # -> web/
 # previous run can never cause an EADDRINUSE race. Override with E2E_PORT.
 PORT="${E2E_PORT:-$(( 20000 + ($$ % 20000) ))}"
 B="http://localhost:$PORT"
+# Better Auth only accepts requests from its own origin.
+export BETTER_AUTH_URL="$B"
 PASS=0; FAIL=0
 ok(){ echo "  PASS  $1"; PASS=$((PASS+1)); }
 no(){ echo "  FAIL  $1"; FAIL=$((FAIL+1)); }
 # eval a JS expr over stdin JSON (s = raw body string)
 J(){ node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(eval(process.argv[1]))}catch(e){console.log('')}})" "$1"; }
 Q(){ node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const j=JSON.parse(s);console.log(eval(process.argv[1]))}catch(e){console.log('')}})" "$1"; }
+
+# A real env var wins over .env.local (Next never overrides one), so this pins the DB.
+E2E_TMP=$(mktemp -d)
+export DATABASE_URL="${E2E_DATABASE_URL:-file:$E2E_TMP/e2e.db}"
+export DATABASE_AUTH_TOKEN="${E2E_DATABASE_AUTH_TOKEN:-}"
+echo "e2e database: ${DATABASE_URL%%\?*}" | sed -E 's#(libsql://)[^.]+#\1<db>#'
 
 # Force the dev email fallback so the magic link is printed to the server log.
 # (Next loads .env.local itself for the server; a real env var here wins over it.)
@@ -49,6 +61,7 @@ stop_server(){
   kill "$SRV" 2>/dev/null
   for pid in $(ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | sort -u); do kill "$pid" 2>/dev/null; done
   wait "$SRV" 2>/dev/null
+  rm -rf "$E2E_TMP"
 }
 trap stop_server EXIT
 curl -s --retry-connrefused --retry 60 --retry-delay 1 "$B/api/health" >/dev/null
@@ -56,6 +69,10 @@ curl -s --retry-connrefused --retry 60 --retry-delay 1 "$B/api/health" >/dev/nul
 echo "== KeysReady V3 e2e =="
 H=$(curl -s --max-time 15 "$B/api/health")
 [ "$(echo "$H" | Q 'j.status')" = "ok" ] && ok "server health ok ($(echo "$H" | Q 'j.db'))" || no "health: $H"
+
+# --- /account (Better Auth) sign-up works on this database ---
+ACC=$(curl -s --max-time 15 -o /dev/null -w '%{http_code}' -X POST "$B/api/account/sign-up/email" -H 'Content-Type: application/json' -H "Origin: $B" --data "{\"email\":\"acct-$(date +%s)-$$@test.com\",\"password\":\"e2e-password-$RANDOM-$RANDOM\",\"name\":\"E2E\"}")
+[ "$ACC" = "200" ] && ok "account sign-up (Better Auth) works" || no "account sign-up=$ACC"
 
 # --- driver login via magic link (dev fallback prints it) ---
 EMAIL="e2e-$(date +%s)@test.com"
@@ -109,8 +126,8 @@ sign(){ node -e "const s=require('stripe')(process.env.STRIPE_SECRET_KEY||'sk_te
 postwh(){ curl -s --max-time 15 -o /dev/null -w '%{http_code}' -X POST "$B/api/webhooks/stripe" -H "stripe-signature: $2" -H 'Content-Type: application/json' --data "$1"; }
 paidnow(){ curl -s --max-time 15 -b "$JD" "$B/api/driver/quote?ref=$REF" | Q '(j.quote||j).paymentStatus'; }
 
-# Unique event ids per run: processed_events persists (Turso), so a FIXED id would
-# be deduped on every run after the first and the fresh booking would never be paid.
+# Unique event ids per run: processed_events persists when E2E_DATABASE_URL reuses a
+# database, so a FIXED id would be deduped on every later run and never mark paid.
 RUN="$$_$(date +%s)"
 EVT_OK=$(mkevt "evt_ok_$RUN" 20000)
 # bad signature -> rejected
