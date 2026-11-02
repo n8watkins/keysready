@@ -3,14 +3,16 @@
 // libSQL is a SQLite fork — RELATIONAL, but serverless/edge-friendly and NOT Google.
 // Local dev:  uses a SQLite file (file:.data/app.db) — no account needed.
 // Production: set DATABASE_URL=libsql://<db>.turso.io and DATABASE_AUTH_TOKEN=<token>.
-// The exact same @libsql/client code talks to both.
+// The exact same @libsql/client code talks to both. See db-config.ts for how the
+// URL is chosen (next dev never uses a remote database unless asked to).
 
 import { createClient, type Client, type Row } from "@libsql/client";
 import { mkdirSync } from "fs";
 import { dirname } from "path";
 import { hashPassword, verifyPassword } from "./auth";
+import { databaseConfig } from "./db-config";
 
-const url = process.env.DATABASE_URL || "file:.data/app.db";
+const { url, authToken } = databaseConfig();
 
 // Ensure the parent dir exists for a local file DB (skipped for remote libsql:// URLs).
 if (url.startsWith("file:")) {
@@ -22,10 +24,7 @@ if (url.startsWith("file:")) {
   }
 }
 
-export const db: Client = createClient({
-  url,
-  authToken: process.env.DATABASE_AUTH_TOKEN, // undefined for local file DBs
-});
+export const db: Client = createClient({ url, authToken });
 
 let migrated: Promise<void> | null = null;
 

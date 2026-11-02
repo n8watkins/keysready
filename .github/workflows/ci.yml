@@ -33,6 +33,8 @@ jobs:
       - run: npm run lint
       - run: npx tsc --noEmit
       - run: npm run build
+      # Signs up on a brand-new database, so a missing table fails CI.
+      - run: npm run e2e:account
 
   landing:
     name: Landing (landing/)
