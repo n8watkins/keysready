@@ -85,7 +85,8 @@ export default function QuotePanelDriver({ bookingRef }: Props) {
   }, [bookingRef]);
 
   useEffect(() => {
-    void load();
+    // Deferred to a microtask so no state update runs synchronously in the effect.
+    void Promise.resolve().then(load);
   }, [load]);
 
   async function decide(kind: "approve" | "decline") {

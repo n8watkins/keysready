@@ -138,7 +138,7 @@ export default function DriverBookPage() {
       <div>
         <div className="rounded-2xl border border-green-200 bg-green-50 p-6 text-center">
           <p className="text-3xl" aria-hidden="true">✅</p>
-          <h1 className="mt-2 text-2xl font-extrabold text-neutral-900">You're booked!</h1>
+          <h1 className="mt-2 text-2xl font-extrabold text-neutral-900">You&rsquo;re booked!</h1>
           <p className="mt-1 text-neutral-600">
             Reference <span className="font-mono font-bold text-neutral-900">{booking.ref}</span>
           </p>
@@ -150,7 +150,7 @@ export default function DriverBookPage() {
         <div className="mt-6 rounded-2xl border border-neutral-200 p-5">
           <h2 className="font-bold text-neutral-900">Get notified about your car</h2>
           <p className="mt-1 mb-4 text-sm text-neutral-600">
-            We'll push you the moment your repair status changes — no need to call.
+            We&rsquo;ll push you the moment your repair status changes — no need to call.
           </p>
           <PushButton
             role="customer"
@@ -195,7 +195,7 @@ export default function DriverBookPage() {
   return (
     <div>
       <h1 className="text-2xl font-extrabold text-neutral-900">Book a repair</h1>
-      <p className="mt-1 text-neutral-600">Pick a car and tell us what's going on.</p>
+      <p className="mt-1 text-neutral-600">Pick a car and tell us what&rsquo;s going on.</p>
 
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <label className="block">
@@ -216,7 +216,7 @@ export default function DriverBookPage() {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-neutral-700">What's going on?</span>
+          <span className="mb-1 block text-sm font-medium text-neutral-700">What&rsquo;s going on?</span>
           <textarea
             value={issue}
             onChange={(e) => setIssue(e.target.value)}

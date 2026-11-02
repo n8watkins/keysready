@@ -19,7 +19,8 @@ export default function StatusPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const r = params.get("ref");
-    if (r) setRef(r);
+    // Deferred to a microtask so no state update runs synchronously in the effect.
+    if (r) void Promise.resolve().then(() => setRef(r));
   }, []);
 
   async function lookup(e: React.FormEvent) {

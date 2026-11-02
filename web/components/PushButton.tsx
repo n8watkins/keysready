@@ -20,13 +20,17 @@ export default function PushButton({ role, bookingRef, phone, label, className }
   const [message, setMessage] = useState<string>("");
 
   useEffect(() => {
+    // Support is only knowable in the browser, so it is read after mount and
+    // applied in a microtask (no state update runs synchronously in the effect).
     const s = getPushSupport();
-    if (s.supported) {
-      setState("ready");
-    } else {
-      setState("unsupported");
-      setMessage(s.reason || "Notifications aren't supported on this device.");
-    }
+    void Promise.resolve().then(() => {
+      if (s.supported) {
+        setState("ready");
+      } else {
+        setState("unsupported");
+        setMessage(s.reason || "Notifications aren't supported on this device.");
+      }
+    });
   }, []);
 
   async function handleClick() {
