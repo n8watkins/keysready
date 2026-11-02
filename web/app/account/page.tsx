@@ -59,15 +59,15 @@ export default function AccountPage() {
           <div className="mt-5">
             <h1 className="text-2xl font-extrabold text-neutral-900">You’re signed in 🎉</h1>
             <dl className="mt-4 space-y-1 text-sm">
-              <div className="flex gap-2">
+              <div className="flex items-baseline gap-2">
                 <dt className="font-semibold text-neutral-500">Name</dt>
                 <dd className="text-neutral-900">{session.user.name || "—"}</dd>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-baseline gap-2">
                 <dt className="font-semibold text-neutral-500">Email</dt>
                 <dd className="text-neutral-900">{session.user.email}</dd>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-baseline gap-2">
                 <dt className="font-semibold text-neutral-500">User ID</dt>
                 <dd className="font-mono text-xs text-neutral-700">{session.user.id}</dd>
               </div>
@@ -166,7 +166,7 @@ export default function AccountPage() {
         )}
       </div>
 
-      <p className="mt-4 text-center text-xs text-neutral-400">
+      <p className="mt-4 text-balance text-center text-xs text-neutral-400">
         Powered by Better Auth · separate from the demo shop login at{" "}
         <Link href="/login" className="underline">/login</Link>
       </p>

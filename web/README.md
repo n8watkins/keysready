@@ -32,20 +32,27 @@ npm run dev                          # http://localhost:2323
 locally, set `SEED_DEMO_STAFF=true` and a strong `DEMO_STAFF_PASSWORD` (12+ characters)
 in `.env.local`; there is no default password, and published defaults are rejected.
 
-### End-to-end test
+### End-to-end tests
 
 ```bash
-npm run build && npm run e2e
+npm run build
+npm run e2e:account   # /account sign-up, sign-in and restart on a fresh database
+npm run e2e           # driver to shop to quote to payment
 ```
 
-`scripts/e2e.sh` drives the full driver to shop to quote to payment flow against a local
-`next start`, including Stripe webhook signature checks. It needs the demo owner settings
-above plus Stripe test keys in `.env.local`. Point `DATABASE_URL` at a throwaway database
-(for example `DATABASE_URL=file:/tmp/keysready-e2e.db npm run e2e`) so test bookings stay
-out of real data.
+Both scripts start `next start` on a brand-new throwaway SQLite file for every run, whatever `.env.local` says, so they never touch a real database.
+`scripts/e2e-account.sh` needs nothing else and runs in CI.
+`scripts/e2e.sh` drives the full driver to shop to quote to payment flow, including Stripe webhook signature checks; it needs the demo owner settings above plus Stripe test keys in `.env.local`.
+To run it against another throwaway database on purpose, set `E2E_DATABASE_URL` (and `E2E_DATABASE_AUTH_TOKEN`).
 
-No database setup needed locally — libSQL writes to a SQLite file at `.data/app.db`
-(gitignored) and seeds demo data on first run. Verified to persist across restarts.
+### Database
+
+Locally the app writes to a SQLite file at `.data/app.db` (gitignored) and seeds demo data on first run; no setup needed.
+Every table, including Better Auth's `user`, `session`, `account` and `verification`, is created on first use and the setup is safe to re-run: it only creates what is missing and never drops or rewrites anything.
+
+`npm run dev` uses the local file.
+If `DATABASE_URL` in `.env.local` points at a remote (Turso) database, `next dev` ignores it and logs a warning, so a dev session can't write to production by accident.
+To develop against a remote database on purpose, use a throwaway one and set `ALLOW_REMOTE_DATABASE=true` as well.
 
 ### Ports & worktrees
 

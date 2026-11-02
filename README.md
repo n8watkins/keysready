@@ -41,6 +41,7 @@ npm run dev                  # http://localhost:2323
 ```
 
 Locally the app writes to a SQLite file at `web/.data/app.db` and seeds a demo shop on first run.
+`npm run dev` and the end-to-end tests never use a remote database, even if `.env.local` names one; see [`web/README.md`](web/README.md#database).
 Every environment variable is documented in [`web/.env.example`](web/.env.example); `.env.local` is git-ignored.
 If you keep secrets in [`pass`](https://www.passwordstore.org/), [pass-env](https://github.com/n8watkins/pass-env) is an optional alternative to `.env.local`: list the names in a `web/.env.pass` file (names only, never values) and run `pass-env run -- npm run dev` from `web/`.
 See [`web/README.md`](web/README.md) for the full setup, the demo shop login, and the end-to-end test.
