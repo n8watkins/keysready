@@ -67,6 +67,7 @@ The hook only checks message format; `git commit --no-verify` skips it.
 ## Security
 
 See [SECURITY.md](SECURITY.md) to report a vulnerability.
+The owner's pending steps (key rotation and a few decisions) are in [OWNER-TODO.md](OWNER-TODO.md).
 
 ## License
 
