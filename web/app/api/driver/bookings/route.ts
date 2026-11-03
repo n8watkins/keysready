@@ -10,7 +10,6 @@ import {
 } from "@/lib/store";
 import { notifyNewBooking } from "@/lib/notifications";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_ISSUE = 2000;

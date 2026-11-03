@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { requireDriver, isDriverUnauthorized } from "@/lib/driver-auth";
 import { getDriverById } from "@/lib/store";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // GET /api/driver/me -> { driver: { id, email, name, phone } } | 401

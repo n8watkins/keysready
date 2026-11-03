@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { requireDriver, isDriverUnauthorized } from "@/lib/driver-auth";
 import { deleteCar } from "@/lib/store";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // DELETE /api/driver/cars/:id -> { ok: true }; 404 if not the driver's car.

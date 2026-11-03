@@ -10,7 +10,6 @@ import { getBookingWithDriverByRef, getQuote, markPaid } from "@/lib/store";
 import { isStripeConfigured } from "@/lib/payments";
 import { notifyPaid } from "@/lib/notifications";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // POST /api/driver/pay/confirm  { ref } -> { quote }

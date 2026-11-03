@@ -11,7 +11,6 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getBookingWithDriverByRef, getQuote, setQuoteItems } from "@/lib/store";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_DESCRIPTION = 200;

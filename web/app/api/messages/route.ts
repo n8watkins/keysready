@@ -15,7 +15,6 @@ import { addMessage, getBookingWithDriverByRef, listMessages } from "@/lib/store
 import { notifyNewMessage } from "@/lib/notifications";
 import type { Booking } from "@/lib/types";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_BODY = 2000;

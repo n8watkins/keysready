@@ -41,11 +41,15 @@ function getStripe(): {
       ) => Promise<{ id: string; url: string | null }>;
     };
   };
-  webhooks: { constructEvent: (body: string | Buffer, sig: string, secret: string) => StripeEvent };
+  webhooks: {
+    constructEventAsync: (body: string | Buffer, sig: string, secret: string) => Promise<StripeEvent>;
+  };
 } {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Stripe = require("stripe");
-  return new Stripe(process.env.STRIPE_SECRET_KEY);
+  // The fetch client works on Node and on Cloudflare Workers, where the SDK's
+  // default node:https client never completes a request.
+  return new Stripe(process.env.STRIPE_SECRET_KEY, { httpClient: Stripe.createFetchHttpClient() });
 }
 
 // The Stripe Checkout Session fields the webhook needs to verify before trusting
@@ -100,11 +104,12 @@ export async function createCheckout(input: CreateCheckoutInput): Promise<Checko
 /**
  * Verify and parse a Stripe webhook payload against the raw request body and the
  * 'stripe-signature' header, using STRIPE_WEBHOOK_SECRET. Only meaningful when
- * Stripe is configured.
+ * Stripe is configured. Async because on Cloudflare Workers Stripe signs with
+ * Web Crypto, which has no synchronous API.
  */
-export function verifyStripeWebhook(rawBody: string | Buffer, sig: string): StripeEvent {
+export async function verifyStripeWebhook(rawBody: string | Buffer, sig: string): Promise<StripeEvent> {
   const stripe = getStripe();
-  return stripe.webhooks.constructEvent(
+  return stripe.webhooks.constructEventAsync(
     rawBody,
     sig,
     process.env.STRIPE_WEBHOOK_SECRET as string,

@@ -7,13 +7,18 @@
 # Database: a brand-new throwaway SQLite file per run, whatever .env.local says, so a
 # run can never write to production. Set E2E_DATABASE_URL (+ E2E_DATABASE_AUTH_TOKEN)
 # to test against another throwaway database on purpose.
+# Against a deployed Worker instead: E2E_BASE_URL=https://... E2E_LOG=<file> bash
+# web/scripts/e2e.sh, where the Worker has a throwaway database, no email provider
+# key and this run's STRIPE_WEBHOOK_SECRET, and <file> is being filled by
+# `npx wrangler tail --format json > <file>` (the magic link is read from it).
 set -uo pipefail
 cd "$(dirname "$0")/.."   # -> web/
 
 # Unique-ish port per run (derived from the shell PID) so a leftover server from a
 # previous run can never cause an EADDRINUSE race. Override with E2E_PORT.
 PORT="${E2E_PORT:-$(( 20000 + ($$ % 20000) ))}"
-B="http://localhost:$PORT"
+B="${E2E_BASE_URL:-http://localhost:$PORT}"
+B="${B%/}"
 # Better Auth only accepts requests from its own origin.
 export BETTER_AUTH_URL="$B"
 PASS=0; FAIL=0
@@ -37,8 +42,9 @@ export BREVO_API_KEY=""
 export RESEND_API_KEY=""
 # Pull the Stripe secrets for webhook signing. Do NOT `source` .env.local — values like
 # EMAIL_FROM ("KeysReady <noreply@...>") contain shell-special chars (< >) and break it.
-export STRIPE_SECRET_KEY="$(grep -E '^STRIPE_SECRET_KEY=' .env.local | cut -d= -f2-)"
-export STRIPE_WEBHOOK_SECRET="$(grep -E '^STRIPE_WEBHOOK_SECRET=' .env.local | cut -d= -f2-)"
+# A real env var wins here too.
+export STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY:-$(grep -sE '^STRIPE_SECRET_KEY=' .env.local | cut -d= -f2-)}"
+export STRIPE_WEBHOOK_SECRET="${STRIPE_WEBHOOK_SECRET:-$(grep -sE '^STRIPE_WEBHOOK_SECRET=' .env.local | cut -d= -f2-)}"
 # The shop login uses the seeded demo owner, which only exists when .env.local sets
 # SEED_DEMO_STAFF=true and a strong DEMO_STAFF_PASSWORD (there is no default).
 # A real env var wins over .env.local. Node builds the JSON so no value is shell-parsed.
@@ -52,17 +58,23 @@ if (!pass) process.exit(1);
 console.log(JSON.stringify({ email, password: pass }));
 ') || { echo "e2e: set SEED_DEMO_STAFF=true and DEMO_STAFF_PASSWORD in web/.env.local first" >&2; exit 2; }
 
-for pid in $(ss -ltnp 2>/dev/null | grep ":$PORT" | grep -oP 'pid=\K[0-9]+' | sort -u); do kill "$pid" 2>/dev/null; done
-LOG=$(mktemp); JD=$(mktemp); JS=$(mktemp)   # JD=driver cookies, JS=shop cookies
-nohup npx next start -p "$PORT" >"$LOG" 2>&1 &
-SRV=$!
-# `npx` forks next-server, so killing $SRV alone leaves the server listening.
-stop_server(){
-  kill "$SRV" 2>/dev/null
-  for pid in $(ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | sort -u); do kill "$pid" 2>/dev/null; done
-  wait "$SRV" 2>/dev/null
-  rm -rf "$E2E_TMP"
-}
+JD=$(mktemp); JS=$(mktemp)   # JD=driver cookies, JS=shop cookies
+if [ -n "${E2E_BASE_URL:-}" ]; then
+  LOG="${E2E_LOG:?set E2E_LOG to the file wrangler tail writes}"
+  stop_server(){ rm -rf "$E2E_TMP"; }
+else
+  for pid in $(ss -ltnp 2>/dev/null | grep ":$PORT" | grep -oP 'pid=\K[0-9]+' | sort -u); do kill "$pid" 2>/dev/null; done
+  LOG=$(mktemp)
+  nohup npx next start -p "$PORT" >"$LOG" 2>&1 &
+  SRV=$!
+  # `npx` forks next-server, so killing $SRV alone leaves the server listening.
+  stop_server(){
+    kill "$SRV" 2>/dev/null
+    for pid in $(ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | sort -u); do kill "$pid" 2>/dev/null; done
+    wait "$SRV" 2>/dev/null
+    rm -rf "$E2E_TMP"
+  }
+fi
 trap stop_server EXIT
 curl -s --retry-connrefused --retry 60 --retry-delay 1 "$B/api/health" >/dev/null
 
@@ -77,7 +89,13 @@ ACC=$(curl -s --max-time 15 -o /dev/null -w '%{http_code}' -X POST "$B/api/accou
 # --- driver login via magic link (dev fallback prints it) ---
 EMAIL="e2e-$(date +%s)@test.com"
 curl -s --max-time 15 -X POST "$B/api/auth/driver/request" -H 'Content-Type: application/json' --data "{\"email\":\"$EMAIL\"}" >/dev/null
-LINK=$(grep -oE "$B/api/auth/driver/verify\?token=[a-f0-9]+" "$LOG" | tail -1)
+# The log can lag the request (wrangler tail streams it), so wait for the link.
+LINK=""
+for _ in $(seq 1 20); do
+  LINK=$(grep -oE "$B/api/auth/driver/verify\?token=[a-f0-9]+" "$LOG" | tail -1)
+  [ -n "$LINK" ] && break
+  sleep 1
+done
 curl -s --max-time 15 -c "$JD" -o /dev/null "$LINK"
 DID=$(curl -s --max-time 15 -b "$JD" "$B/api/driver/me" | Q 'j.driver.id')
 [ -n "$DID" ] && ok "driver magic-link login ($DID)" || no "driver login failed"

@@ -11,7 +11,6 @@ import { getDriverSession } from "@/lib/driver-auth";
 import { getBookingWithDriverByRef, getQuote, setBookingSessionId } from "@/lib/store";
 import { createCheckout } from "@/lib/payments";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // POST /api/driver/pay  { ref } -> { mode:'stripe', url } | { mode:'sim' }

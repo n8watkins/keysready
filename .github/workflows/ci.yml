@@ -36,6 +36,30 @@ jobs:
       # Signs up on a brand-new database, so a missing table fails CI.
       - run: npm run e2e:account
 
+  # The Cloudflare Worker build of web/: binding types match wrangler.jsonc, the
+  # OpenNext build succeeds and wrangler can bundle it.
+  worker:
+    name: Worker (web/)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    env:
+      SESSION_SECRET: ci-only-not-a-real-secret
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Binding types match wrangler.jsonc
+        run: npm run check:cf-types
+      - run: npm run build:worker
+      - name: Bundle the Worker
+        run: npx wrangler deploy --dry-run --outdir "${{ runner.temp }}/worker-bundle"
+
   landing:
     name: Landing (landing/)
     runs-on: ubuntu-latest

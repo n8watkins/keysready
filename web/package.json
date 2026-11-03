@@ -9,7 +9,12 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "e2e": "bash scripts/e2e.sh",
-    "e2e:account": "bash scripts/e2e-account.sh"
+    "e2e:account": "bash scripts/e2e-account.sh",
+    "build:worker": "opennextjs-cloudflare build",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv --strict-vars=false --include-runtime=false cloudflare-env.d.ts",
+    "check:cf-types": "wrangler types --env-interface CloudflareEnv --strict-vars=false --include-runtime=false --check cloudflare-env.d.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
@@ -23,6 +28,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "1.20.15",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -31,6 +37,12 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "4.157.0"
+  },
+  "overrides": {
+    "@node-minify/core": {
+      "glob": "^10.5.0"
+    }
   }
 }

@@ -1,0 +1,41 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // The KeysReady demo app (web/) as a Cloudflare Worker, built by OpenNext
+  // (`npm run deploy`, see README.md "Deploy"). The landing page in ../landing
+  // is a separate Worker.
+  "name": "keysready",
+  "account_id": "b2c564cf83cb9184dd6d7cc4ff8b38bf",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-28",
+  // nodejs_compat is required by OpenNext, and by web-push and the HMAC/scrypt
+  // sign-in (node:crypto); global_fetch_strictly_public keeps the server's own
+  // fetches (Stripe, Brevo, Resend, push services) on the public internet.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // Served at keysready.<account>.workers.dev until the domain moves.
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Run next to the Turso database (aws-us-east-2): each request makes several
+  // queries. Static assets are still served from the edge.
+  "placement": { "mode": "targeted", "region": "aws:us-east-2" },
+  "vars": {
+    // Canonical origin for magic links and redirects (lib/app-url.ts).
+    "APP_URL": "https://keysready.nathancwatkins23.workers.dev",
+    "VAPID_SUBJECT": "mailto:nathancwatkins23@gmail.com",
+    // Public half of the Web Push key pair; the browser fetches it from
+    // /api/push/vapid-public-key. VAPID_PRIVATE_KEY is a secret.
+    "VAPID_PUBLIC_KEY": "BCZtNXQJPAVj9nyzVablgRxS5tUKoiuSCZ5bO8OH5Vkb5vT4JbOFHv2HzghOI9hx6dnIQi3YMEoHHE-6i_ka05Y",
+    // The public demo seeds its staff OWNER login (DEMO_STAFF_EMAIL and
+    // DEMO_STAFF_PASSWORD secrets). Never on a real shop's deployment.
+    "SEED_DEMO_STAFF": "true"
+  },
+  // Secrets (`wrangler secret put <NAME>`, never in this file): SESSION_SECRET,
+  // DATABASE_URL, DATABASE_AUTH_TOKEN, VAPID_PRIVATE_KEY, DEMO_STAFF_EMAIL,
+  // DEMO_STAFF_PASSWORD, EMAIL_FROM, BREVO_API_KEY, RESEND_API_KEY, STRIPE_SECRET_KEY,
+  // STRIPE_WEBHOOK_SECRET.
+  "observability": { "enabled": true },
+  "upload_source_maps": true
+}

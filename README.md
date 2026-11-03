@@ -8,7 +8,7 @@ Customers get a push notification at every step, from "booking confirmed" to "re
 ![KeysReady landing page](docs/screenshots/landing-desktop-fold.png)
 
 - Landing page: https://keysready.n8builds.dev
-- Single-shop demo app: https://keysready.vercel.app
+- Single-shop demo app: https://keysready.vercel.app (moving to Cloudflare Workers: https://keysready.nathancwatkins23.workers.dev; see web/README.md "Deploy")
 
 > **Status: in development.**
 > The app runs end to end for one demo shop.
@@ -48,7 +48,7 @@ See [`web/README.md`](web/README.md) for the full setup, the demo shop login, an
 
 ## Stack
 
-- **Next.js 16** on **Vercel**, with the API as route handlers (no separate server).
+- **Next.js 16** on **Cloudflare Workers** (OpenNext), with the API as route handlers (no separate server).
 - **Turso / libSQL**: the same `@libsql/client` code runs against a local SQLite file and Turso cloud.
 - **Web Push** (`web-push` + VAPID) for staff and customer notifications.
 - **Stripe Checkout** for estimate payments; card data never touches the app.

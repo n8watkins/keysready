@@ -4,7 +4,6 @@ import { requireStaff, isUnauthorized } from '@/lib/auth';
 import { requireDriver, isDriverUnauthorized } from '@/lib/driver-auth';
 import type { SubscriberRole } from '@/lib/types';
 
-export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const onlyDigits = (s: string) => s.replace(/\D/g, '');

@@ -4,8 +4,6 @@ import { createMagicToken, countRecentMagicTokens } from "@/lib/store";
 import { sendMagicLink } from "@/lib/email";
 import { canonicalOrigin } from "@/lib/app-url";
 
-// node:crypto + DB live on Node, not the edge.
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Loose but real email shape check. Not RFC-perfect — just enough to reject
