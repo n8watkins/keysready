@@ -7,7 +7,6 @@ import { NextResponse } from "next/server";
 import { getDriverSession } from "@/lib/driver-auth";
 import { getBookingWithDriverByRef, getQuote } from "@/lib/store";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // GET /api/driver/quote?ref=BK-XXXX -> { quote }

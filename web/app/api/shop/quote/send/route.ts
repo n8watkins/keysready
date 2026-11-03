@@ -9,7 +9,6 @@ import { getSession } from "@/lib/auth";
 import { getBookingWithDriverByRef, getQuote, sendQuote } from "@/lib/store";
 import { notifyQuoteSent } from "@/lib/notifications";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // POST /api/shop/quote/send  { ref } -> { quote }

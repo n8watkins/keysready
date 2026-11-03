@@ -14,7 +14,6 @@ import {
 } from "@/lib/store";
 import { sendPush } from "@/lib/push";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // POST /api/driver/quote/decline  { ref } -> { quote }

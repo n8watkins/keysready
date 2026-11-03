@@ -4,7 +4,6 @@ import { notifyNewBooking } from '@/lib/notifications';
 import { requireStaff, isUnauthorized } from '@/lib/auth';
 import type { NewBookingInput } from '@/lib/types';
 
-export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // GET /api/bookings — staff dashboard list (auth required, scoped to the

@@ -8,7 +8,6 @@ import { getDriverSession } from "@/lib/driver-auth";
 import { approveQuote, getBookingWithDriverByRef, getQuote } from "@/lib/store";
 import { notifyQuoteApproved } from "@/lib/notifications";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // POST /api/driver/quote/approve  { ref } -> { quote }

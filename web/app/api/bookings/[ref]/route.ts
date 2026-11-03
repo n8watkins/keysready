@@ -8,7 +8,6 @@ import { notifyStatusChange } from '@/lib/notifications';
 import { requireStaff, isUnauthorized } from '@/lib/auth';
 import { BOOKING_STATUSES, type Booking, type BookingStatus } from '@/lib/types';
 
-export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const onlyDigits = (s: string) => s.replace(/\D/g, '');

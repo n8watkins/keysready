@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { requireDriver, isDriverUnauthorized } from "@/lib/driver-auth";
 import { addCar, listCars } from "@/lib/store";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_MAKE = 60;

@@ -8,7 +8,6 @@ import {
 } from "@/lib/driver-auth";
 import { canonicalOrigin } from "@/lib/app-url";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Build an absolute redirect URL on the TRUSTED canonical origin. `path` is

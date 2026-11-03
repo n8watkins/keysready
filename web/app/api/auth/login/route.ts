@@ -8,9 +8,6 @@ import {
 } from "@/lib/auth";
 import { getUserByEmail } from "@/lib/store";
 
-// node:crypto (scrypt/HMAC) is unavailable on the edge runtime, so auth MUST
-// run on Node.
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // One generic failure for every rejection path (bad JSON, unknown email, wrong
