@@ -8,7 +8,7 @@ Customers get a push notification at every step, from "booking confirmed" to "re
 ![KeysReady landing page](docs/screenshots/landing-desktop-fold.png)
 
 - Landing page: https://keysready.n8builds.dev
-- Single-shop demo app: https://keysready.vercel.app (moving to Cloudflare Workers: https://keysready.nathancwatkins23.workers.dev; see web/README.md "Deploy")
+- Single-shop demo app: https://app.keysready.n8builds.dev (Cloudflare Workers; see web/README.md "Deploy")
 
 > **Status: in development.**
 > The app runs end to end for one demo shop.

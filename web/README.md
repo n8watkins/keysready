@@ -99,7 +99,7 @@ public/     manifest.webmanifest · sw.js · icons/
 ## Deploy
 
 The app runs as a Cloudflare Worker built with OpenNext (`@opennextjs/cloudflare`); `wrangler.jsonc` and `open-next.config.ts` hold the config.
-It is served at https://keysready.nathancwatkins23.workers.dev, and https://keysready.vercel.app keeps serving the old Vercel deployment until the domain moves.
+It is served at https://app.keysready.n8builds.dev (a `routes` custom domain in `wrangler.jsonc`, so every deploy keeps it; the workers.dev address is off).
 
 ```bash
 npm run deploy    # from web/: OpenNext build, then wrangler deploy
@@ -110,5 +110,5 @@ npm run preview   # the built Worker locally on workerd (secrets from .dev.vars)
   `APP_URL`, `VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` and `SEED_DEMO_STAFF` are plain variables in `wrangler.jsonc`.
 - **From GitHub:** `.github/workflows/deploy.yml` builds on every push to main that touches `web/`, and deploys once the repository has a `CLOUDFLARE_API_TOKEN` secret (an API token with the "Edit Cloudflare Workers" permission); until then it skips the deploy with a notice.
 - **Against the deployed Worker:** `scripts/e2e.sh` runs there too, with `E2E_BASE_URL` and `E2E_LOG` (see the script's header); give the Worker a throwaway database first, never the production one.
-- **Stripe** webhooks are sent to whichever host the Stripe dashboard names; add `<host>/api/webhooks/stripe` there when the domain moves.
+- **Stripe** sends `checkout.session.completed` (the only event the route handles) to `https://app.keysready.n8builds.dev/api/webhooks/stripe`, the endpoint configured in the Stripe dashboard; its signing secret is `STRIPE_WEBHOOK_SECRET`.
 

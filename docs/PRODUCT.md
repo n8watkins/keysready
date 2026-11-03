@@ -1,7 +1,7 @@
 # KeysReady: Product Definition
 
 Status: concept with a working prototype.
-Features marked **Prototype** run today in the single-shop demo at https://keysready.vercel.app; everything else is planned.
+Features marked **Prototype** run today in the single-shop demo at https://app.keysready.n8builds.dev; everything else is planned.
 Written 2026-11-01.
 Competitor facts come from the [market report](MARKET_REPORT_2026-11.md) (vendor pages checked 2026-11-01).
 Carried over from the retired private repository on 2026-11-02; see [HISTORY.md](HISTORY.md).

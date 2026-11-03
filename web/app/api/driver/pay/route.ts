@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { getDriverSession } from "@/lib/driver-auth";
 import { getBookingWithDriverByRef, getQuote, setBookingSessionId } from "@/lib/store";
 import { createCheckout } from "@/lib/payments";
+import { canonicalOrigin } from "@/lib/app-url";
 
 export const dynamic = "force-dynamic";
 
@@ -57,8 +58,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Nothing to pay" }, { status: 400 });
   }
 
-  // Build absolute success/cancel URLs from the request origin.
-  const origin = new URL(req.url).origin;
+  // Build absolute success/cancel URLs on the trusted canonical origin.
+  const origin = canonicalOrigin(req);
 
   try {
     const result = await createCheckout({
