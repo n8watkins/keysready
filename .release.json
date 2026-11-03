@@ -4,5 +4,6 @@
     "web/package-lock.json"
   ],
   "workflows": "package",
-  "repository": "n8watkins/keysready"
+  "repository": "n8watkins/keysready",
+  "visibility": "public"
 }
