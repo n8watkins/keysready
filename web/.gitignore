@@ -45,3 +45,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Cloudflare Workers (OpenNext build output, local state, dev secrets)
+/.open-next/
+/.wrangler/
+.dev.vars*
