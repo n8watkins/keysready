@@ -54,6 +54,12 @@ See [`web/README.md`](web/README.md) for the full setup, the demo shop login, an
 - **Stripe Checkout** for estimate payments; card data never touches the app.
 - **Brevo or Resend** for magic-link email, with a console fallback in development.
 
+## History
+
+KeysReady began as a one-day 2025 prototype and was rebuilt in 2026; this repository started fresh on 2026-11-02.
+[`docs/HISTORY.md`](docs/HISTORY.md) covers where it came from, why the old history was not carried over, and the security and product lessons.
+The product definition is in [`docs/PRODUCT.md`](docs/PRODUCT.md) and the competitor research in [`docs/MARKET_REPORT_2026-11.md`](docs/MARKET_REPORT_2026-11.md).
+
 ## Commits and releases
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org) (`feat: ...`, `fix: ...`, `docs: ...`), and releases are cut with [release-kit](https://github.com/n8watkins/release-kit); see [`RELEASING.md`](RELEASING.md).
