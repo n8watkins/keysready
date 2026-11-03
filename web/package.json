@@ -39,5 +39,10 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "4.157.0"
+  },
+  "overrides": {
+    "@node-minify/core": {
+      "glob": "^10.5.0"
+    }
   }
 }
