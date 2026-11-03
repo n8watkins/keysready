@@ -22,8 +22,11 @@ function useReveal(threshold = 0.25) {
       return () => cancelAnimationFrame(id);
     }
     const io = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
+      // One callback can carry several entries for the element: a scroll before
+      // the first delivery gives "out of view" and then "in view" together, so
+      // reading only the first left the chart unrevealed after a quick jump.
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
           setInView(true);
           io.disconnect();
         }
