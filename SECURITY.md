@@ -13,7 +13,7 @@ You should get a reply within a week.
 
 ## Scope
 
-- The app in `web/` and the demo deployment at https://keysready.vercel.app.
+- The app in `web/` and the demo deployment at https://app.keysready.n8builds.dev.
 - The landing page in `landing/`.
 
 Please do not run automated scans against the demo deployment, send messages to real people, or try to access data that is not yours.

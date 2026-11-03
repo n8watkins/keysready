@@ -2,11 +2,23 @@
 
 Things only the owner can do for KeysReady: keys, accounts and decisions.
 Agents keep this list current; tick an item by changing `[ ]` to `[x]` and adding the date.
-No secrets go in this file: keys live in pass-env (entries `keysready/<NAME>`) and in Vercel, and this file names only the entries.
+No secrets go in this file: keys live in pass-env (entries `keysready/<NAME>`) and as secrets on the `keysready` Cloudflare Worker, and this file names only the entries.
 The cross-project list of keys to rotate is `SECURITY-TODO.md` in the private [secret-handling-review](https://github.com/n8watkins/secret-handling-review/blob/main/SECURITY-TODO.md) repo.
 
 Last checked: 2026-11-02.
-For reference: the demo shop's staff login (`DEMO_STAFF_EMAIL` and `DEMO_STAFF_PASSWORD`) is in `web/.env.local`, and in Vercel production for the demo at https://keysready.vercel.app.
+## 0. Add the Stripe webhook for the new address
+
+- [ ] Stripe (test mode) sends `checkout.session.completed` to https://app.keysready.n8builds.dev/api/webhooks/stripe.
+
+**Steps.**
+In Stripe, test mode, Developers, Webhooks, add an endpoint with URL `https://app.keysready.n8builds.dev/api/webhooks/stripe` and the single event `checkout.session.completed` (the only one the route handles).
+Copy its signing secret and set it from `web/`: `npx wrangler secret put STRIPE_WEBHOOK_SECRET` (paste at the prompt), and update `web/.env.local` and pass-env.
+Delete the old endpoint on keysready.vercel.app.
+
+**Why.**
+Without it a test payment succeeds in Stripe but the booking never shows as paid.
+
+For reference: the demo shop's staff login (`DEMO_STAFF_EMAIL` and `DEMO_STAFF_PASSWORD`) is in `web/.env.local`, and set as Worker secrets for the demo at https://app.keysready.n8builds.dev.
 
 ## 1. Rotate the five keys that were pasted into a chat
 
@@ -17,7 +29,7 @@ Replace five keys that were pasted into an earlier agent chat and were never rot
 They are the five keys in the table below; the old handoff that first listed them was in the private `keysready-archive` repository, deleted on 2026-11-02 (see [docs/HISTORY.md](docs/HISTORY.md)).
 
 **Steps.**
-For each key: create the new one, store it in pass-env in your own terminal, send it to Vercel production, update `web/.env.local`, then delete or revoke the old one.
+For each key: create the new one, store it in pass-env in your own terminal, set it as a Worker secret, update `web/.env.local`, then delete or revoke the old one.
 
 | Key | Where to rotate | pass-env entry |
 | --- | --- | --- |
@@ -25,16 +37,16 @@ For each key: create the new one, store it in pass-env in your own terminal, sen
 | `RESEND_API_KEY` | Resend, API Keys | `keysready/RESEND_API_KEY` |
 | `DATABASE_AUTH_TOKEN` | Turso: `turso db tokens create <database>`, then `turso db tokens invalidate <database>` for the old ones | `keysready/DATABASE_AUTH_TOKEN` |
 | `STRIPE_SECRET_KEY` (test mode) | Stripe, test mode, Developers, API keys, Roll key | `keysready/STRIPE_SECRET_KEY` |
-| The Vercel access token | Vercel, Account Settings, Tokens: delete it and create a new one only if something still needs it | `machine/VERCEL_TOKEN` (only if kept) |
+| The Vercel access token | Vercel, Account Settings, Tokens: delete it (the apps no longer run on Vercel) | `machine/VERCEL_TOKEN` (remove) |
 
 From the `web/` folder, for each of the first four:
 
 ```sh
 pass-env set keysready/<NAME>
-pass-env pipe keysready/<NAME> -- vercel env add <NAME> production   # after `vercel env rm <NAME> production`
+pass-env pipe keysready/<NAME> -- npx wrangler secret put <NAME>   # reads the value from stdin
 ```
 
-Then redeploy (`vercel deploy --prod --yes` from `web/`, or ask Claude) and check a sign-in email and a test payment on https://keysready.vercel.app.
+Secrets apply without a redeploy; check a sign-in email and a test payment on https://app.keysready.n8builds.dev.
 Ask Claude to switch `web/.env.local` to a `.env.pass` file afterwards, so the local copies go away (the e2e script reads `.env.local` directly and needs a small change first).
 
 **Why.**

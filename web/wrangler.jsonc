@@ -11,8 +11,9 @@
   // sign-in (node:crypto); global_fetch_strictly_public keeps the server's own
   // fetches (Stripe, Brevo, Resend, push services) on the public internet.
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
-  // Served at keysready.<account>.workers.dev until the domain moves.
-  "workers_dev": true,
+  // Served only at its custom domain; deploys keep the domain attached.
+  "workers_dev": false,
+  "routes": [{ "pattern": "app.keysready.n8builds.dev", "custom_domain": true }],
   "preview_urls": false,
   "assets": {
     "directory": ".open-next/assets",
@@ -23,7 +24,7 @@
   "placement": { "mode": "targeted", "region": "aws:us-east-2" },
   "vars": {
     // Canonical origin for magic links and redirects (lib/app-url.ts).
-    "APP_URL": "https://keysready.nathancwatkins23.workers.dev",
+    "APP_URL": "https://app.keysready.n8builds.dev",
     "VAPID_SUBJECT": "mailto:nathancwatkins23@gmail.com",
     // Public half of the Web Push key pair; the browser fetches it from
     // /api/push/vapid-public-key. VAPID_PRIVATE_KEY is a secret.
