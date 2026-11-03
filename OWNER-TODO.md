@@ -14,7 +14,7 @@ For reference: the demo shop's staff login (`DEMO_STAFF_EMAIL` and `DEMO_STAFF_P
 
 **What.**
 Replace five keys that were pasted into an earlier agent chat and were never rotated.
-They are listed in section 6 of the old handoff (`docs/HANDOFF.md` in the read-only [keysready-archive](https://github.com/n8watkins/keysready-archive) repo).
+They are the five keys in the table below; the old handoff that first listed them was in the private `keysready-archive` repository, deleted on 2026-11-02 (see [docs/HISTORY.md](docs/HISTORY.md)).
 
 **Steps.**
 For each key: create the new one, store it in pass-env in your own terminal, send it to Vercel production, update `web/.env.local`, then delete or revoke the old one.
