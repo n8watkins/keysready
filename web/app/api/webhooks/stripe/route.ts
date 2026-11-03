@@ -17,7 +17,6 @@ import {
 import { isStripeConfigured, verifyStripeWebhook } from "@/lib/payments";
 import { notifyPaid } from "@/lib/notifications";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // POST /api/webhooks/stripe
@@ -42,7 +41,7 @@ export async function POST(req: Request) {
 
   let event;
   try {
-    event = verifyStripeWebhook(rawBody, sig);
+    event = await verifyStripeWebhook(rawBody, sig);
   } catch {
     // Bad signature / malformed payload — reject so Stripe doesn't keep retrying
     // a payload we can't trust.
