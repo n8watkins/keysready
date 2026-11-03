@@ -37,6 +37,6 @@
   // DATABASE_URL, DATABASE_AUTH_TOKEN, VAPID_PRIVATE_KEY, DEMO_STAFF_EMAIL,
   // DEMO_STAFF_PASSWORD, EMAIL_FROM, BREVO_API_KEY, RESEND_API_KEY, STRIPE_SECRET_KEY,
   // STRIPE_WEBHOOK_SECRET.
-  "observability": { "enabled": true },
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
   "upload_source_maps": true
 }

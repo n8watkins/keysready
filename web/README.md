@@ -112,3 +112,13 @@ npm run preview   # the built Worker locally on workerd (secrets from .dev.vars)
 - **Against the deployed Worker:** `scripts/e2e.sh` runs there too, with `E2E_BASE_URL` and `E2E_LOG` (see the script's header); give the Worker a throwaway database first, never the production one.
 - **Stripe** sends `checkout.session.completed` (the only event the route handles) to `https://app.keysready.n8builds.dev/api/webhooks/stripe`, the endpoint configured in the Stripe dashboard; its signing secret is `STRIPE_WEBHOOK_SECRET`.
 
+
+### Reading the logs
+
+Workers Logs keeps every request (`observability` in `wrangler.jsonc`, `head_sampling_rate: 1`).
+In the Cloudflare dashboard, open Workers & Pages, then the `keysready` Worker, then Logs.
+To stream them live, run `npx wrangler tail keysready --format pretty`.
+`--search` matches log messages only, not request URLs, so use `--status error` or no filter to see requests.
+The Stripe webhook logs one JSON line (`event: stripe_webhook`) with `reason`, `route` and `status` for every rejected or ignored delivery: `missing_signature`, `signature_verification_failed` (with Stripe's error type and whether `STRIPE_WEBHOOK_SECRET` is set), `unhandled_event_type`, `booking_not_found`, `amount_mismatch`, the database failures that ask Stripe to retry, and the rest.
+Errors thrown in pages, route handlers or the proxy log `unhandled_exception` with the route (`instrumentation.ts`).
+They never carry secrets, the payload or signature, cookies, emails or other personal data.
