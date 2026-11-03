@@ -16,6 +16,17 @@ import {
 } from "@/lib/store";
 import { isStripeConfigured, verifyStripeWebhook } from "@/lib/payments";
 import { notifyPaid } from "@/lib/notifications";
+import { errorSummary, logError, logWarn, safeCode, type LogFields } from "@/lib/log";
+
+const ROUTE = "/api/webhooks/stripe";
+
+/** One JSON line per webhook outcome worth reviewing; never the payload or signature. */
+function warn(fields: Omit<LogFields, "event" | "route">) {
+  logWarn({ event: "stripe_webhook", route: ROUTE, ...fields } as LogFields);
+}
+function fail(fields: Omit<LogFields, "event" | "route">) {
+  logError({ event: "stripe_webhook", route: ROUTE, ...fields } as LogFields);
+}
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +34,13 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   // Without Stripe configured there is no webhook to honor.
   if (!isStripeConfigured()) {
+    warn({ reason: "not_configured", status: 400 });
     return NextResponse.json({ error: "Stripe is not configured" }, { status: 400 });
   }
 
   const sig = req.headers.get("stripe-signature");
   if (!sig) {
+    warn({ reason: "missing_signature", status: 400 });
     return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
   }
 
@@ -35,16 +48,25 @@ export async function POST(req: Request) {
   let rawBody: string;
   try {
     rawBody = await req.text();
-  } catch {
+  } catch (err) {
+    warn({ reason: "invalid_body", status: 400, error: errorSummary(err) });
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
   let event;
   try {
     event = await verifyStripeWebhook(rawBody, sig);
-  } catch {
+  } catch (err) {
     // Bad signature / malformed payload — reject so Stripe doesn't keep retrying
-    // a payload we can't trust.
+    // a payload we can't trust. Stripe's error type and message name the cause
+    // (no matching signature, timestamp outside tolerance, no secret set).
+    fail({
+      reason: "signature_verification_failed",
+      status: 400,
+      stripeError: safeCode((err as { type?: unknown } | null)?.type),
+      secretSet: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+      error: errorSummary(err),
+    });
     return NextResponse.json({ error: "Signature verification failed" }, { status: 400 });
   }
 
@@ -59,7 +81,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ received: true, deduped: true });
       }
     } catch (err) {
-      console.error(`[stripe webhook] dedup check failed for event ${event.id}:`, err);
+      fail({ reason: "dedup_check_failed", status: 503, eventId: event.id, error: errorSummary(err) });
       return NextResponse.json({ error: "processing error" }, { status: 503 });
     }
 
@@ -67,6 +89,7 @@ export async function POST(req: Request) {
     const bookingRef = session?.metadata?.bookingRef;
     if (!bookingRef) {
       // Nothing to mark; acknowledge so Stripe stops retrying.
+      warn({ reason: "missing_booking_ref", status: 200, eventId: event.id });
       return NextResponse.json({ received: true });
     }
 
@@ -81,30 +104,31 @@ export async function POST(req: Request) {
     } catch (err) {
       // Transient DB error -> let Stripe retry. Nothing has been persisted yet
       // (the event id is recorded only after markPaid), so the retry reprocesses.
-      console.error(`[stripe webhook] ${bookingRef}: read failed, asking Stripe to retry:`, err);
+      fail({ reason: "booking_read_failed", status: 503, eventId: event.id, bookingRef, error: errorSummary(err) });
       return NextResponse.json({ error: "processing error" }, { status: 503 });
     }
 
     if (!found) {
-      console.warn(`[stripe webhook] no booking for ref=${bookingRef}; ignoring`);
+      warn({ reason: "booking_not_found", status: 200, eventId: event.id, bookingRef });
       return NextResponse.json({ received: true });
     }
     if (session.payment_status !== "paid") {
-      console.warn(
-        `[stripe webhook] ${bookingRef}: session payment_status=${session.payment_status} (not paid); ignoring`,
-      );
+      warn({ reason: "session_not_paid", status: 200, eventId: event.id, bookingRef, paymentStatus: safeCode(session.payment_status) });
       return NextResponse.json({ received: true });
     }
     if (session.currency !== "usd") {
-      console.warn(
-        `[stripe webhook] ${bookingRef}: unexpected currency=${session.currency}; ignoring`,
-      );
+      warn({ reason: "unexpected_currency", status: 200, eventId: event.id, bookingRef, currency: safeCode(session.currency) });
       return NextResponse.json({ received: true });
     }
     if (session.amount_total !== quote.totalCents) {
-      console.warn(
-        `[stripe webhook] ${bookingRef}: amount_total=${session.amount_total} != quote total=${quote.totalCents}; ignoring`,
-      );
+      warn({
+        reason: "amount_mismatch",
+        status: 200,
+        eventId: event.id,
+        bookingRef,
+        amountTotal: session.amount_total ?? undefined,
+        quoteTotal: quote.totalCents,
+      });
       return NextResponse.json({ received: true });
     }
 
@@ -115,7 +139,7 @@ export async function POST(req: Request) {
     try {
       transitioned = await markPaid(bookingRef);
     } catch (err) {
-      console.error(`[stripe webhook] ${bookingRef}: markPaid failed, asking Stripe to retry:`, err);
+      fail({ reason: "mark_paid_failed", status: 503, eventId: event.id, bookingRef, error: errorSummary(err) });
       return NextResponse.json({ error: "processing error" }, { status: 503 });
     }
     if (transitioned) {
@@ -123,8 +147,9 @@ export async function POST(req: Request) {
       // already recorded.
       try {
         await notifyPaid({ ...found.booking, driverId: found.driverId });
-      } catch {
-        /* non-fatal */
+      } catch (err) {
+        // Non-fatal: the payment is recorded either way.
+        warn({ reason: "notify_paid_failed", status: 200, eventId: event.id, bookingRef, error: errorSummary(err) });
       }
     }
 
@@ -135,11 +160,12 @@ export async function POST(req: Request) {
     try {
       await markEventProcessed(event.id);
     } catch (err) {
-      console.warn(
-        `[stripe webhook] ${bookingRef}: failed to record event id ${event.id} (non-fatal):`,
-        err,
-      );
+      warn({ reason: "record_event_failed", status: 200, eventId: event.id, bookingRef, error: errorSummary(err) });
     }
+  } else {
+    // Stripe sends only the events the endpoint subscribes to, so another type
+    // means the dashboard subscription and this handler disagree.
+    warn({ reason: "unhandled_event_type", status: 200, eventId: event.id, eventType: safeCode(event.type) });
   }
 
   // Acknowledge everything else (and successful processing) with a 200.
