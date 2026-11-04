@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/better-auth-client";
+import { LogoMark } from "@/components/LogoMark";
 
 type Mode = "sign-in" | "sign-up";
 
@@ -42,9 +43,7 @@ export default function AccountPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12">
       <Link href="/" className="mb-8 flex items-center gap-2 font-extrabold text-neutral-900">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-sm text-white">
-          KR
-        </span>
+        <LogoMark />
         KeysReady
       </Link>
 

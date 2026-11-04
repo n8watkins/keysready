@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LogoMark } from "@/components/LogoMark";
 
 /** The kinds of pushes a shop fires across a single repair — cycled in the hero. */
 const NOTIFS = [
@@ -49,9 +50,7 @@ export default function HeroNotifications() {
       <div className="rounded-3xl bg-white/95 p-4 shadow-2xl ring-1 ring-black/5 backdrop-blur">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-xs font-bold text-white">
-              KR
-            </span>
+            <LogoMark />
             <span className="text-xs font-semibold text-neutral-500">QuickFix Auto · now</span>
           </div>
           <span className="rounded-full bg-neutral-900/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-neutral-500">
