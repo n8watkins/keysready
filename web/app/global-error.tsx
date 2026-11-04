@@ -1,10 +1,11 @@
 "use client"; // Error boundaries must be Client Components
 
 import { useEffect } from "react";
+import { reportError } from "@/lib/error-reporting";
 
 // Root error boundary for the App Router. This replaces the root layout when
 // active, so it must render its own <html> and <body> and cannot rely on
-// global stylesheets being loaded — styles are inlined to stay self-contained.
+// global stylesheets being loaded: styles are inlined to stay self-contained.
 export default function GlobalError({
   error,
   unstable_retry,
@@ -14,11 +15,12 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error(error);
+    reportError(error);
   }, [error]);
 
   return (
     <html lang="en">
-      <title>Something went wrong — KeysReady</title>
+      <title>Something went wrong - KeysReady</title>
       <body
         style={{
           margin: 0,
@@ -74,8 +76,8 @@ export default function GlobalError({
               color: "#525252",
             }}
           >
-            We hit an unexpected problem. Please try again — your booking is
-            safe.
+            We hit an unexpected problem and have been told about it. Your
+            bookings are safe.
           </p>
           <button
             type="button"

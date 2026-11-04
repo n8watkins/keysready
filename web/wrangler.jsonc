@@ -5,7 +5,7 @@
   // is a separate Worker.
   "name": "keysready",
   "account_id": "b2c564cf83cb9184dd6d7cc4ff8b38bf",
-  "main": ".open-next/worker.js",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-10-28",
   // nodejs_compat is required by OpenNext, and by web-push and the HMAC/scrypt
   // sign-in (node:crypto); global_fetch_strictly_public keeps the server's own
@@ -31,7 +31,10 @@
     "VAPID_PUBLIC_KEY": "BCZtNXQJPAVj9nyzVablgRxS5tUKoiuSCZ5bO8OH5Vkb5vT4JbOFHv2HzghOI9hx6dnIQi3YMEoHHE-6i_ka05Y",
     // The public demo seeds its staff OWNER login (DEMO_STAFF_EMAIL and
     // DEMO_STAFF_PASSWORD secrets). Never on a real shop's deployment.
-    "SEED_DEMO_STAFF": "true"
+    "SEED_DEMO_STAFF": "true",
+    // Server errors go to Sentry (worker/sentry.ts). A DSN is public by design:
+    // it only lets a sender add events to this one project.
+    "SENTRY_DSN": "https://3123f2054201d0d28a6004a0167aaede@o4507767562371072.ingest.us.sentry.io/4512375298654208"
   },
   // Secrets (`wrangler secret put <NAME>`, never in this file): SESSION_SECRET,
   // DATABASE_URL, DATABASE_AUTH_TOKEN, VAPID_PRIVATE_KEY, DEMO_STAFF_EMAIL,
