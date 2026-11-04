@@ -1,5 +1,5 @@
 {
-  "name": "KeysReady — Booking & Updates",
+  "name": "KeysReady",
   "short_name": "KeysReady",
   "description": "Book auto repair and get push updates when your car is ready. Shops get alerts on new bookings.",
   "id": "/",
@@ -7,7 +7,7 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#d40000",
+  "theme_color": "#16171b",
   "background_color": "#ffffff",
   "categories": ["business", "productivity"],
   "icons": [

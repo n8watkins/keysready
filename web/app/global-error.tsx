@@ -53,7 +53,7 @@ export default function GlobalError({
               fontWeight: 800,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "#d40000",
+              color: "#c81e1e",
               margin: 0,
             }}
           >
@@ -88,7 +88,7 @@ export default function GlobalError({
               width: "100%",
               border: "none",
               borderRadius: "0.75rem",
-              background: "#d40000",
+              background: "#c81e1e",
               color: "#ffffff",
               fontSize: "1rem",
               fontWeight: 600,

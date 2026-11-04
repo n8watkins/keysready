@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { LogoMark } from "@/components/LogoMark";
 
 const NAV = [
   { href: "/driver", label: "My Garage" },
@@ -34,9 +35,7 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
       <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between gap-2 px-4 py-3">
           <Link href="/driver" className="flex items-center gap-2 font-extrabold text-neutral-900">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-sm text-white">
-              KR
-            </span>
+            <LogoMark />
             KeysReady
           </Link>
           <button

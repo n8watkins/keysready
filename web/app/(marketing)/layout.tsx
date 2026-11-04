@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoMark } from "@/components/LogoMark";
 
 export default function MarketingLayout({
   children,
@@ -10,9 +11,7 @@ export default function MarketingLayout({
       <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center gap-2 font-extrabold text-neutral-900">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-sm text-white">
-              KR
-            </span>
+            <LogoMark />
             KeysReady
           </Link>
           <nav className="flex items-center gap-1 text-sm font-medium">
