@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LogoMark } from "@/components/LogoMark";
 
 /** The not-found and error pages: the KeysReady mark, a label, a heading, one
  *  sentence and the ways out, on one card. `inLayout` is for pages inside a
@@ -23,9 +24,7 @@ export default function EdgeCard({
         href="/"
         className="inline-flex items-center gap-2 font-extrabold text-neutral-900"
       >
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-sm text-white">
-          KR
-        </span>
+        <LogoMark />
         <span>KeysReady</span>
       </Link>
       <p className="mt-8 text-xs font-extrabold uppercase tracking-wider text-brand">
