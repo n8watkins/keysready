@@ -52,6 +52,11 @@ echo "== KeysReady /account e2e (fresh database) =="
 start_server
 [ "$(curl -s -o /dev/null -w '%{http_code}' "$B/account")" = "200" ] && ok "/account page loads" || no "/account page"
 
+# Unknown paths answer a real 404 with KeysReady's own not-found page.
+NF=$(curl -s --max-time 15 -w '\n%{http_code}' "$B/zz-no-such-page")
+{ [ "$(code "$NF")" = "404" ] && body "$NF" | grep -q "<h1[^>]*>This page isn&#x27;t here.</h1>"; } \
+  && ok "unknown path answers 404 with the not-found page" || no "unknown path: $(code "$NF")"
+
 EMAIL="account-e2e-$(date +%s)@example.com"
 PW="e2e-password-$RANDOM-$RANDOM"
 R=$(post sign-up/email "{\"email\":\"$EMAIL\",\"password\":\"$PW\",\"name\":\"E2E Driver\"}")

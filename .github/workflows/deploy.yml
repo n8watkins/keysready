@@ -31,6 +31,10 @@ jobs:
       # Build-time only: the app refuses to load without a session secret. The
       # Worker's real one is a wrangler secret.
       SESSION_SECRET: build-only-not-a-real-secret
+      # Browser errors go to Sentry (web/lib/error-reporting.ts). Only this
+      # build sets the DSN, so local, CI and test builds send nothing.
+      NEXT_PUBLIC_SENTRY_DSN: https://3123f2054201d0d28a6004a0167aaede@o4507767562371072.ingest.us.sentry.io/4512375298654208
+      NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
