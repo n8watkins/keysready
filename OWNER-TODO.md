@@ -91,3 +91,12 @@ An unused project can still hold old data and keys; Claude's Firebase login does
 
 **Unblocks.**
 Nothing new; it removes a forgotten resource.
+
+## Keys
+
+Checked 2026-11-09 against the secret names on the Worker and in GitHub Actions (names only, no values).
+New values go into the owner's pass-env store and are sent with `pass-env pipe <entry> -- <command>`; never commit or paste a value.
+
+- [ ] `BREVO_API_KEY`, `RESEND_API_KEY`, `DATABASE_AUTH_TOKEN`, `STRIPE_SECRET_KEY` (test) and the Vercel token: need new values before this is used for real (demo for now).
+- [ ] `GOOGLE_CLIENT_SECRET`, `TWILIO_AUTH_TOKEN`: the code reads them but the Worker does not have them; set them when those features are used.
+- [x] `SESSION_SECRET`, `STRIPE_WEBHOOK_SECRET`, `VAPID_PRIVATE_KEY`, `DEMO_STAFF_PASSWORD`: set on the Worker.
