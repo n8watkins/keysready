@@ -3,6 +3,7 @@ import { createBooking, listBookings, DEMO_SHOP_ID } from '@/lib/store';
 import { notifyNewBooking } from '@/lib/notifications';
 import { requireStaff, isUnauthorized } from '@/lib/auth';
 import type { NewBookingInput } from '@/lib/types';
+import { guardPublicForm } from '@/lib/public-guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,8 +41,10 @@ const MAX_LEN: Record<string, number> = {
 
 // POST /api/bookings — create a booking (PUBLIC customer) + notify staff.
 // Always scoped to the demo shop; the client can never choose its own shopId.
+// After validation it needs a Turnstile token (`turnstileToken`) and room under
+// the daily caps (lib/public-guard.ts) before anything is written or pushed.
 export async function POST(req: Request) {
-  let body: Partial<NewBookingInput>;
+  let body: Partial<NewBookingInput> & { turnstileToken?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -69,6 +72,10 @@ export async function POST(req: Request) {
       );
     }
   }
+
+  // Only a well-formed booking spends a Turnstile token and the daily caps.
+  const refused = await guardPublicForm(req, 'booking', body.turnstileToken);
+  if (refused) return refused;
 
   let booking;
   try {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 import PushButton from "@/components/PushButton";
 import type { Booking } from "@/lib/types";
 
@@ -37,6 +38,8 @@ function validate(payload: Record<string, string>): string | null {
 
 export default function BookPage() {
   const [submitting, setSubmitting] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const [widgetKey, setWidgetKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [booking, setBooking] = useState<Booking | null>(null);
   const minDate = todayISO();
@@ -50,13 +53,17 @@ export default function BookPage() {
       setError(validationError);
       return;
     }
+    if (!token) {
+      setError("Please complete the verification check first.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, turnstileToken: token }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
@@ -64,6 +71,9 @@ export default function BookPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to book");
     } finally {
+      // A token works once: ask the widget for a fresh one.
+      setToken(null);
+      setWidgetKey((k) => k + 1);
       setSubmitting(false);
     }
   }
@@ -127,13 +137,15 @@ export default function BookPage() {
           <input name="preferredDate" type="date" required min={minDate} className={FIELD} />
         </label>
 
+        <TurnstileWidget action="booking" onToken={setToken} resetKey={widgetKey} />
+
         {error && (
           <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
         )}
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !token}
           className="min-h-[52px] w-full rounded-xl bg-brand px-6 text-base font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
         >
           {submitting ? "Booking…" : "Book repair"}

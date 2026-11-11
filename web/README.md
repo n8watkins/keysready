@@ -15,7 +15,7 @@ and pay with Stripe Checkout. **No Google, no Firebase, no app store.**
 | Notifications | **Web Push** (`web-push` + VAPID) now · SMS later behind the same layer |
 | Data | **Turso / libSQL** (relational SQLite — not Postgres, not Google). Local: a SQLite file, zero setup. Prod: Turso cloud |
 | Hosting | **Cloudflare Workers** (OpenNext) |
-| Auth | Shop staff: email + password (scrypt, HMAC session cookie). Drivers: email magic links (Cloudflare Email Service). Better Auth is mounted at `/api/account/*` as the next auth foundation |
+| Auth | Shop staff: email + password (scrypt, HMAC session cookie). Drivers: email magic links (sent through the mailroom Worker). The booking and sign-in forms need a Cloudflare Turnstile check and stay under durable daily caps (D1). Better Auth is mounted at `/api/account/*` as the next auth foundation |
 | Payments | Stripe Checkout + signed webhook (simulated when `STRIPE_SECRET_KEY` is unset) |
 
 ## Run it
