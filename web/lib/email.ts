@@ -1,129 +1,105 @@
 // Transactional email for KeysReady drivers (magic sign-in links).
 //
-// Server-only. Sends via Brevo's HTTP API (BREVO_API_KEY) — the primary
-// provider — falling back to Resend (RESEND_API_KEY) if that's what's
-// configured, and to a DEV FALLBACK that prints the link to the server console
-// when no provider is set, so the demo works with no third-party account.
+// Server-only. Sends through Cloudflare Email Service: the Worker's `EMAIL`
+// send_email binding (wrangler.jsonc), no API key. When there is no binding
+// (next dev, e2e) the link is printed to the server console instead, so the
+// demo works with no account. Sends are capped per UTC day (lib/email-gate.ts).
 //
-// Both providers are plain HTTPS APIs (no SMTP, no Node-only deps), so this runs
-// unchanged on Vercel's Node runtime AND on Cloudflare Workers. This NEVER
-// throws out to the request handler — leaking a failure (or a slow timeout)
-// would let a caller probe whether an account exists, so all errors are
-// swallowed and logged.
+// This NEVER throws out to the request handler: leaking a failure (or a slow
+// timeout) would let a caller probe whether an account exists, so all errors
+// are swallowed and logged.
+
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 const SUBJECT = "Your KeysReady sign-in link";
+export const EMAIL_FROM = { email: "keysready@n8builds.dev", name: "KeysReady" };
 
 export interface SendResult {
   ok: boolean;
 }
 
-interface Sender {
-  name: string;
-  email: string;
+/** The slice of the Workers `send_email` binding this module uses. */
+export interface EmailBinding {
+  send(message: {
+    to: string;
+    from: { email: string; name: string };
+    subject: string;
+    html: string;
+    text: string;
+  }): Promise<unknown>;
+}
+
+function emailBinding(): EmailBinding | undefined {
+  try {
+    return (getCloudflareContext().env as { EMAIL?: EmailBinding }).EMAIL;
+  } catch {
+    return undefined; // not running on the Worker (next dev, e2e)
+  }
+}
+
+/** Sends one magic link through `binding`. Never throws. */
+export async function deliverMagicLink(
+  binding: EmailBinding,
+  toEmail: string,
+  linkUrl: string,
+): Promise<SendResult> {
+  try {
+    await binding.send({
+      to: toEmail,
+      from: EMAIL_FROM,
+      subject: SUBJECT,
+      html: magicLinkHtml(linkUrl),
+      text: magicLinkText(linkUrl),
+    });
+    // One line per send: kind only, never an address (a future admin page counts these).
+    console.log(JSON.stringify({ event: "email_sent", kind: "magic-link" }));
+    return { ok: true };
+  } catch (err) {
+    console.error("[email] send failed:", err instanceof Error ? err.message : err);
+    return { ok: false };
+  }
 }
 
 /**
- * Send a magic sign-in link to `toEmail`.
- *
- * Provider order: Brevo (BREVO_API_KEY) → Resend (RESEND_API_KEY) → dev console.
- * Always resolves (never rejects) so the /api/auth/driver/request handler can
- * stay constant-time and non-enumerating.
+ * Send a magic sign-in link to `toEmail`. Always resolves (never rejects) so
+ * the /api/auth/driver/request handler stays constant-time and non-enumerating.
  */
 export async function sendMagicLink(
   toEmail: string,
   linkUrl: string,
 ): Promise<SendResult> {
-  const html = magicLinkHtml(linkUrl);
-
-  const brevoKey = process.env.BREVO_API_KEY;
-  if (brevoKey) return sendViaBrevo(brevoKey, toEmail, html);
-
-  const resendKey = process.env.RESEND_API_KEY;
-  if (resendKey) return sendViaResend(resendKey, toEmail, html);
-
-  // DEV FALLBACK — no provider configured. Print the link so the demo works.
-  console.log(`[email:dev] magic link for ${toEmail} -> ${linkUrl}`);
-  return { ok: true };
-}
-
-/** POST https://api.brevo.com/v3/smtp/email — header is `api-key`, not Bearer. */
-async function sendViaBrevo(
-  apiKey: string,
-  toEmail: string,
-  html: string,
-): Promise<SendResult> {
-  const sender = parseSender(process.env.EMAIL_FROM);
-  if (!sender) {
-    console.error("[email] EMAIL_FROM is missing or malformed; Brevo needs a verified sender");
-    return { ok: false };
+  const binding = emailBinding();
+  if (!binding) {
+    // DEV FALLBACK: no binding. Print the link so the demo works.
+    console.log(`[email:dev] magic link for ${toEmail} -> ${linkUrl}`);
+    return { ok: true };
   }
   try {
-    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "api-key": apiKey,
-        "Content-Type": "application/json",
-        accept: "application/json",
-      },
-      body: JSON.stringify({
-        sender,
-        to: [{ email: toEmail }],
-        subject: SUBJECT,
-        htmlContent: html,
-      }),
-    });
-    if (!res.ok) {
-      // Log but do NOT throw — the caller must still return a generic 200.
-      const detail = await res.text().catch(() => "");
-      console.error(`[email] Brevo send failed (${res.status}): ${detail}`);
+    const [{ db, ready }, { reserveEmailSend }] = await Promise.all([
+      import("./db"),
+      import("./email-gate"),
+    ]);
+    await ready();
+    if (!(await reserveEmailSend(db, "magic-link"))) {
+      console.error("[email] daily send cap reached; magic-link not sent");
       return { ok: false };
     }
-    return { ok: true };
   } catch (err) {
-    console.error("[email] Brevo request error:", err);
+    console.error("[email] cap check failed:", err instanceof Error ? err.message : err);
     return { ok: false };
   }
+  return deliverMagicLink(binding, toEmail, linkUrl);
 }
 
-/** POST https://api.resend.com/emails — kept as a fallback provider. */
-async function sendViaResend(
-  apiKey: string,
-  toEmail: string,
-  html: string,
-): Promise<SendResult> {
-  const from = process.env.EMAIL_FROM || "KeysReady <onboarding@resend.dev>";
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ from, to: [toEmail], subject: SUBJECT, html }),
-    });
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      console.error(`[email] Resend send failed (${res.status}): ${detail}`);
-      return { ok: false };
-    }
-    return { ok: true };
-  } catch (err) {
-    console.error("[email] Resend request error:", err);
-    return { ok: false };
-  }
-}
-
-/**
- * Parse EMAIL_FROM into Brevo's {name, email} sender object. Accepts either
- * "Name <email@host>" or a bare "email@host"; returns null when it is missing
- * or malformed (there is no default sender: it must be a verified address).
- */
-function parseSender(from: string | undefined): Sender | null {
-  if (!from) return null;
-  const m = from.match(/^\s*(.*?)\s*<\s*([^>]+?)\s*>\s*$/);
-  if (m && m[2].includes("@")) return { name: m[1] || "KeysReady", email: m[2] };
-  const bare = from.trim();
-  return bare.includes("@") ? { name: "KeysReady", email: bare } : null;
+function magicLinkText(linkUrl: string): string {
+  return [
+    "Sign in to KeysReady",
+    "",
+    "Open this link to sign in. It expires in 20 minutes and can be used once:",
+    linkUrl,
+    "",
+    "If you didn't request this, you can safely ignore this email.",
+  ].join("\n");
 }
 
 // Simple, brand-consistent HTML body. Inline styles only (email clients strip

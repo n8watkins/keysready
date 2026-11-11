@@ -36,12 +36,9 @@ echo "e2e database: ${DATABASE_URL%%\?*}" | sed -E 's#(libsql://)[^.]+#\1<db>#'
 
 # Force the dev email fallback so the magic link is printed to the server log.
 # (Next loads .env.local itself for the server; a real env var here wins over it.)
-# Clear BOTH providers — Brevo takes priority over Resend, so if it's left set the
-# link is actually emailed and never reaches the log for the grep below.
-export BREVO_API_KEY=""
-export RESEND_API_KEY=""
+# No EMAIL binding under next start, so the link is printed to the log for the grep below.
 # Pull the Stripe secrets for webhook signing. Do NOT `source` .env.local — values like
-# EMAIL_FROM ("KeysReady <noreply@...>") contain shell-special chars (< >) and break it.
+# EMAIL_FROM (a "Name <addr>" value) contain shell-special chars (< >) and break it.
 # A real env var wins here too.
 export STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY:-$(grep -sE '^STRIPE_SECRET_KEY=' .env.local | cut -d= -f2-)}"
 export STRIPE_WEBHOOK_SECRET="${STRIPE_WEBHOOK_SECRET:-$(grep -sE '^STRIPE_WEBHOOK_SECRET=' .env.local | cut -d= -f2-)}"
