@@ -1,9 +1,12 @@
 // Transactional email for KeysReady drivers (magic sign-in links).
 //
-// Server-only. Sends through Cloudflare Email Service: the Worker's `EMAIL`
-// send_email binding (wrangler.jsonc), no API key. When there is no binding
-// (next dev, e2e) the link is printed to the server console instead, so the
-// demo works with no account. Sends are capped per UTC day (lib/email-gate.ts).
+// Server-only. Sends through the mailroom Worker (n8watkins/mailroom) over the
+// MAILROOM service binding (wrangler.jsonc, app slice `keysready`). Mailroom
+// holds the Cloudflare Email Service binding and enforces the caps (per
+// recipient, per day, per month, all apps), the suppression list and
+// idempotency, so this Worker has no binding that can send email by itself.
+// When there is no binding (next dev, e2e) the link is printed to the server
+// console instead, so the demo works with no account.
 //
 // This NEVER throws out to the request handler: leaking a failure (or a slow
 // timeout) would let a caller probe whether an account exists, so all errors
@@ -18,40 +21,57 @@ export interface SendResult {
   ok: boolean;
 }
 
-/** The slice of the Workers `send_email` binding this module uses. */
-export interface EmailBinding {
-  send(message: {
-    to: string;
-    from: { email: string; name: string };
-    subject: string;
-    html: string;
-    text: string;
-  }): Promise<unknown>;
+/** The slice of mailroom's `send()` this module uses (mailroom src/types.ts). */
+export interface MailroomRequest {
+  kind: "signin";
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  from?: string;
+  fromName?: string;
+  key?: string;
 }
 
-function emailBinding(): EmailBinding | undefined {
+export type MailroomResult =
+  | { ok: true; messageId: string; duplicate?: boolean }
+  | { ok: false; code: string; retryable: boolean; message: string };
+
+export interface MailroomBinding {
+  send(request: MailroomRequest): Promise<MailroomResult>;
+}
+
+function mailroomBinding(): MailroomBinding | undefined {
   try {
-    return (getCloudflareContext().env as { EMAIL?: EmailBinding }).EMAIL;
+    return (getCloudflareContext().env as { MAILROOM?: MailroomBinding }).MAILROOM;
   } catch {
     return undefined; // not running on the Worker (next dev, e2e)
   }
 }
 
-/** Sends one magic link through `binding`. Never throws. */
+/** Sends one magic link through mailroom. Never throws. */
 export async function deliverMagicLink(
-  binding: EmailBinding,
+  mailroom: MailroomBinding,
   toEmail: string,
   linkUrl: string,
+  key?: string,
 ): Promise<SendResult> {
   try {
-    await binding.send({
+    const result = await mailroom.send({
+      kind: "signin",
       to: toEmail,
-      from: EMAIL_FROM,
+      from: EMAIL_FROM.email,
+      fromName: EMAIL_FROM.name,
       subject: SUBJECT,
       html: magicLinkHtml(linkUrl),
       text: magicLinkText(linkUrl),
+      key,
     });
-    // One line per send: kind only, never an address (a future admin page counts these).
+    if (!result.ok) {
+      // A refusal (a cap, suppression) logs its code only, never an address.
+      console.error(JSON.stringify({ event: "email_refused", kind: "magic-link", code: result.code }));
+      return { ok: false };
+    }
     console.log(JSON.stringify({ event: "email_sent", kind: "magic-link" }));
     return { ok: true };
   } catch (err) {
@@ -63,32 +83,20 @@ export async function deliverMagicLink(
 /**
  * Send a magic sign-in link to `toEmail`. Always resolves (never rejects) so
  * the /api/auth/driver/request handler stays constant-time and non-enumerating.
+ * `tokenId` keys the send, so a retry of the same link goes out once.
  */
 export async function sendMagicLink(
   toEmail: string,
   linkUrl: string,
+  tokenId?: string,
 ): Promise<SendResult> {
-  const binding = emailBinding();
-  if (!binding) {
+  const mailroom = mailroomBinding();
+  if (!mailroom) {
     // DEV FALLBACK: no binding. Print the link so the demo works.
     console.log(`[email:dev] magic link for ${toEmail} -> ${linkUrl}`);
     return { ok: true };
   }
-  try {
-    const [{ db, ready }, { reserveEmailSend }] = await Promise.all([
-      import("./db"),
-      import("./email-gate"),
-    ]);
-    await ready();
-    if (!(await reserveEmailSend(db, "magic-link"))) {
-      console.error("[email] daily send cap reached; magic-link not sent");
-      return { ok: false };
-    }
-  } catch (err) {
-    console.error("[email] cap check failed:", err instanceof Error ? err.message : err);
-    return { ok: false };
-  }
-  return deliverMagicLink(binding, toEmail, linkUrl);
+  return deliverMagicLink(mailroom, toEmail, linkUrl, tokenId ? `signin-${tokenId.slice(0, 32)}` : undefined);
 }
 
 function magicLinkText(linkUrl: string): string {

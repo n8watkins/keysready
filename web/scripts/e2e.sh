@@ -62,7 +62,7 @@ if [ -n "${E2E_BASE_URL:-}" ]; then
 else
   for pid in $(ss -ltnp 2>/dev/null | grep ":$PORT" | grep -oP 'pid=\K[0-9]+' | sort -u); do kill "$pid" 2>/dev/null; done
   LOG=$(mktemp)
-  nohup npx next start -p "$PORT" >"$LOG" 2>&1 &
+  TURNSTILE_ALLOW_TEST_KEYS=true TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA nohup npx next start -p "$PORT" >"$LOG" 2>&1 &
   SRV=$!
   # `npx` forks next-server, so killing $SRV alone leaves the server listening.
   stop_server(){
@@ -85,7 +85,12 @@ ACC=$(curl -s --max-time 15 -o /dev/null -w '%{http_code}' -X POST "$B/api/accou
 
 # --- driver login via magic link (dev fallback prints it) ---
 EMAIL="e2e-$(date +%s)@test.com"
-curl -s --max-time 15 -X POST "$B/api/auth/driver/request" -H 'Content-Type: application/json' --data "{\"email\":\"$EMAIL\"}" >/dev/null
+# Turnstile: no token is refused; Cloudflare's always-pass test secret takes its dummy token.
+NOTOK=$(curl -s --max-time 15 -o /dev/null -w '%{http_code}' -X POST "$B/api/auth/driver/request" -H 'Content-Type: application/json' --data "{\"email\":\"$EMAIL\"}")
+[ "$NOTOK" = "403" ] && ok "sign-in request without a Turnstile token refused (403)" || no "no-token sign-in=$NOTOK (expected 403)"
+NOTOK=$(curl -s --max-time 15 -o /dev/null -w '%{http_code}' -X POST "$B/api/bookings" -H 'Content-Type: application/json' --data '{"firstName":"A","lastName":"B","phone":"+15125550000","vehicle":"2018 Honda Civic","issue":"e2e","preferredDate":"2099-01-01"}')
+[ "$NOTOK" = "403" ] && ok "booking without a Turnstile token refused (403)" || no "no-token booking=$NOTOK (expected 403)"
+curl -s --max-time 15 -X POST "$B/api/auth/driver/request" -H 'Content-Type: application/json' --data "{\"email\":\"$EMAIL\",\"turnstileToken\":\"XXXX.DUMMY.TOKEN.XXXX\"}" >/dev/null
 # The log can lag the request (wrangler tail streams it), so wait for the link.
 LINK=""
 for _ in $(seq 1 20); do

@@ -25,8 +25,7 @@
   "vars": {
     // Canonical origin for magic links and redirects (lib/app-url.ts).
     "APP_URL": "https://app.keysready.n8builds.dev",
-    "VAPID_SUBJECT": "mailto:nathancwatkins23@gmail.com",
-    // Public half of the Web Push key pair; the browser fetches it from
+    "VAPID_SUBJECT": "mailto:nathancwatkins23@gmail.com",    // Public half of the Web Push key pair; the browser fetches it from
     // /api/push/vapid-public-key. VAPID_PRIVATE_KEY is a secret.
     "VAPID_PUBLIC_KEY": "BCZtNXQJPAVj9nyzVablgRxS5tUKoiuSCZ5bO8OH5Vkb5vT4JbOFHv2HzghOI9hx6dnIQi3YMEoHHE-6i_ka05Y",
     // The public demo seeds its staff OWNER login (DEMO_STAFF_EMAIL and
@@ -40,9 +39,18 @@
   // DATABASE_URL, DATABASE_AUTH_TOKEN, VAPID_PRIVATE_KEY, DEMO_STAFF_EMAIL,
   // DEMO_STAFF_PASSWORD, STRIPE_SECRET_KEY,
   // STRIPE_WEBHOOK_SECRET.
-  // Magic-link email: Cloudflare Email Service, no API key. The binding may send
-  // from this one address only; lib/email-gate.ts caps sends per UTC day.
-  "send_email": [{ "name": "EMAIL", "allowed_sender_addresses": ["keysready@n8builds.dev"] }],
+  // Also secrets: TURNSTILE_SECRET_KEY (Siteverify) and TURNSTILE_SITE_KEY (the
+  // widget key, public by design; /api/turnstile/site-key hands it to the forms).
+  // Magic-link email goes through the mailroom Worker (n8watkins/mailroom), app
+  // slice `keysready`: it holds the email binding and the caps, so this Worker
+  // has no way to send mail itself (lib/email.ts).
+  "services": [
+    { "binding": "MAILROOM", "service": "mailroom", "entrypoint": "Mailroom", "props": { "app": "keysready" } }
+  ],
+  // Durable daily caps on the public forms (lib/limits.ts).
+  "d1_databases": [
+    { "binding": "LIMITS", "database_name": "keysready-limits", "database_id": "c0417c7a-8076-4458-9136-1c345a8e4bd7" }
+  ],
   "observability": { "enabled": true, "head_sampling_rate": 1 },
   "upload_source_maps": true
 }
