@@ -15,7 +15,7 @@ and pay with Stripe Checkout. **No Google, no Firebase, no app store.**
 | Notifications | **Web Push** (`web-push` + VAPID) now · SMS later behind the same layer |
 | Data | **Turso / libSQL** (relational SQLite — not Postgres, not Google). Local: a SQLite file, zero setup. Prod: Turso cloud |
 | Hosting | **Cloudflare Workers** (OpenNext) |
-| Auth | Shop staff: email + password (scrypt, HMAC session cookie). Drivers: email magic links (Brevo or Resend). Better Auth is mounted at `/api/account/*` as the next auth foundation |
+| Auth | Shop staff: email + password (scrypt, HMAC session cookie). Drivers: email magic links (Cloudflare Email Service). Better Auth is mounted at `/api/account/*` as the next auth foundation |
 | Payments | Stripe Checkout + signed webhook (simulated when `STRIPE_SECRET_KEY` is unset) |
 
 ## Run it
@@ -106,7 +106,7 @@ npm run deploy    # from web/: OpenNext build, then wrangler deploy
 npm run preview   # the built Worker locally on workerd (secrets from .dev.vars)
 ```
 
-- **Secrets** are set with `npx wrangler secret put <NAME>`, never in a file: `SESSION_SECRET`, `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `VAPID_PRIVATE_KEY`, `DEMO_STAFF_EMAIL`, `DEMO_STAFF_PASSWORD`, `EMAIL_FROM`, `BREVO_API_KEY`, `RESEND_API_KEY`, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
+- **Secrets** are set with `npx wrangler secret put <NAME>`, never in a file: `SESSION_SECRET`, `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `VAPID_PRIVATE_KEY`, `DEMO_STAFF_EMAIL`, `DEMO_STAFF_PASSWORD`, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
   `APP_URL`, `VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` and `SEED_DEMO_STAFF` are plain variables in `wrangler.jsonc`.
 - **From GitHub:** `.github/workflows/deploy.yml` builds on every push to main that touches `web/`, and deploys once the repository has a `CLOUDFLARE_API_TOKEN` secret (an API token with the "Edit Cloudflare Workers" permission); until then it skips the deploy with a notice.
 - **Against the deployed Worker:** `scripts/e2e.sh` runs there too, with `E2E_BASE_URL` and `E2E_LOG` (see the script's header); give the Worker a throwaway database first, never the production one.

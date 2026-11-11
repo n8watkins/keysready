@@ -22,7 +22,7 @@ For reference: the demo shop's staff login (`DEMO_STAFF_EMAIL` and `DEMO_STAFF_P
 
 ## 1. Rotate the five keys that were pasted into a chat
 
-- [ ] Brevo, Resend, Turso, Stripe (test) and the Vercel token are rotated, updated and stored in pass-env.
+- [ ] Turso, Stripe (test) and the Vercel token are rotated, updated and stored in pass-env.
 
 **What.**
 Replace five keys that were pasted into an earlier agent chat and were never rotated.
@@ -33,8 +33,6 @@ For each key: create the new one, store it in pass-env in your own terminal, set
 
 | Key | Where to rotate | pass-env entry |
 | --- | --- | --- |
-| `BREVO_API_KEY` | Brevo, SMTP and API, API keys | `keysready/BREVO_API_KEY` |
-| `RESEND_API_KEY` | Resend, API Keys | `keysready/RESEND_API_KEY` |
 | `DATABASE_AUTH_TOKEN` | Turso: `turso db tokens create <database>`, then `turso db tokens invalidate <database>` for the old ones | `keysready/DATABASE_AUTH_TOKEN` |
 | `STRIPE_SECRET_KEY` (test mode) | Stripe, test mode, Developers, API keys, Roll key | `keysready/STRIPE_SECRET_KEY` |
 | The Vercel access token | Vercel, Account Settings, Tokens: delete it (the apps no longer run on Vercel) | `machine/VERCEL_TOKEN` (remove) |
@@ -97,6 +95,6 @@ Nothing new; it removes a forgotten resource.
 Checked 2026-11-09 against the secret names on the Worker and in GitHub Actions (names only, no values).
 New values go into the owner's pass-env store and are sent with `pass-env pipe <entry> -- <command>`; never commit or paste a value.
 
-- [ ] `BREVO_API_KEY`, `RESEND_API_KEY`, `DATABASE_AUTH_TOKEN`, `STRIPE_SECRET_KEY` (test) and the Vercel token: need new values before this is used for real (demo for now).
+- [ ] `DATABASE_AUTH_TOKEN`, `STRIPE_SECRET_KEY` (test) and the Vercel token: need new values before this is used for real (demo for now).
 - [ ] `GOOGLE_CLIENT_SECRET`, `TWILIO_AUTH_TOKEN`: the code reads them but the Worker does not have them; set them when those features are used.
 - [x] `SESSION_SECRET`, `STRIPE_WEBHOOK_SECRET`, `VAPID_PRIVATE_KEY`, `DEMO_STAFF_PASSWORD`: set on the Worker.

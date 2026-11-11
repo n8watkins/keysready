@@ -52,7 +52,7 @@ See [`web/README.md`](web/README.md) for the full setup, the demo shop login, an
 - **Turso / libSQL**: the same `@libsql/client` code runs against a local SQLite file and Turso cloud.
 - **Web Push** (`web-push` + VAPID) for staff and customer notifications.
 - **Stripe Checkout** for estimate payments; card data never touches the app.
-- **Brevo or Resend** for magic-link email, with a console fallback in development.
+- **Cloudflare Email Service** for magic-link email, with a console fallback in development.
 
 ## History
 

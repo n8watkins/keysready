@@ -14,7 +14,8 @@
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv --strict-vars=false --include-runtime=false cloudflare-env.d.ts",
-    "check:cf-types": "wrangler types --env-interface CloudflareEnv --strict-vars=false --include-runtime=false --check cloudflare-env.d.ts"
+    "check:cf-types": "wrangler types --env-interface CloudflareEnv --strict-vars=false --include-runtime=false --check cloudflare-env.d.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
@@ -41,6 +42,7 @@
     "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vitest": "^3.2.7",
     "wrangler": "4.157.0"
   },
   "overrides": {

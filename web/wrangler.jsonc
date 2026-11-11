@@ -9,7 +9,7 @@
   "compatibility_date": "2026-10-28",
   // nodejs_compat is required by OpenNext, and by web-push and the HMAC/scrypt
   // sign-in (node:crypto); global_fetch_strictly_public keeps the server's own
-  // fetches (Stripe, Brevo, Resend, push services) on the public internet.
+  // fetches (Stripe, push services) on the public internet.
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   // Served only at its custom domain; deploys keep the domain attached.
   "workers_dev": false,
@@ -38,8 +38,11 @@
   },
   // Secrets (`wrangler secret put <NAME>`, never in this file): SESSION_SECRET,
   // DATABASE_URL, DATABASE_AUTH_TOKEN, VAPID_PRIVATE_KEY, DEMO_STAFF_EMAIL,
-  // DEMO_STAFF_PASSWORD, EMAIL_FROM, BREVO_API_KEY, RESEND_API_KEY, STRIPE_SECRET_KEY,
+  // DEMO_STAFF_PASSWORD, STRIPE_SECRET_KEY,
   // STRIPE_WEBHOOK_SECRET.
+  // Magic-link email: Cloudflare Email Service, no API key. The binding may send
+  // from this one address only; lib/email-gate.ts caps sends per UTC day.
+  "send_email": [{ "name": "EMAIL", "allowed_sender_addresses": ["keysready@n8builds.dev"] }],
   "observability": { "enabled": true, "head_sampling_rate": 1 },
   "upload_source_maps": true
 }
