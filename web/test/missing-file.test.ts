@@ -25,7 +25,6 @@ describe("isMissingFile", () => {
       "/apple-icon.png",
       "/manifest.webmanifest",
       "/sw.js",
-      "/.well-known/security.txt",
     ]) {
       expect(isMissingFile(path), path).toBe(false);
     }
@@ -46,6 +45,8 @@ describe("isMissingFile", () => {
       "/api/config.json",
       "/_next/static/chunks/gone.js",
       "/icon.png",
+      "/.well-known/.env",
+      "/.well-known/security.txt",
       "/sw.js.map",
     ]) {
       expect(isMissingFile(path), path).toBe(true);
