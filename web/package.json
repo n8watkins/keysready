@@ -25,7 +25,7 @@
     "@sentry/core": "11.10.0",
     "better-auth": "^1.7.15",
     "kysely": "^0.29.2",
-    "next": "16.4.3",
+    "next": "16.4.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "stripe": "^22.2.2",
